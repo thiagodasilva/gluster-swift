@@ -747,6 +747,14 @@ class Swauth(object):
         account = req.path_info_pop()
         if req.path_info or not account or account[0] == '.':
             return HTTPBadRequest(request=req)
+
+        # check gluster volume already exists or is valid
+        path = quote('/v1/%s%s' % (self.reseller_prefix, account))
+        resp = self.make_pre_authed_request(
+            req.environ, 'HEAD', path).get_response(self.app)
+        if resp.status_int // 100 != 2:
+            return HTTPBadRequest(request=req)
+
         # Ensure the container in the main auth account exists (this
         # container represents the new account)
         path = quote('/v1/%s/%s' % (self.auth_account, account))

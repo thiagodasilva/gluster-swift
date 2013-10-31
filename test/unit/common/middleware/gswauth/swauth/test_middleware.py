@@ -1892,6 +1892,7 @@ class TestAuth(unittest.TestCase):
 
     def test_put_account_success(self):
         self.test_auth.app = FakeApp(iter([
+            ('204 No Content', {}, ''),
             # Initial HEAD of account container to check for
             # pre-existence
             ('404 Not Found', {}, ''),
@@ -1912,11 +1913,12 @@ class TestAuth(unittest.TestCase):
                      'X-Auth-Admin-Key': 'supertest'}
         ).get_response(self.test_auth)
         self.assertEquals(resp.status_int, 201)
-        self.assertEquals(self.test_auth.app.calls, 5)
+        self.assertEquals(self.test_auth.app.calls, 6)
 
     def test_put_account_success_preexist_but_not_completed(
             self):
         self.test_auth.app = FakeApp(iter([
+            ('204 No Content', {}, ''),
             # Initial HEAD of account container to check for pre-existence
             # We're going to show it as existing this time, but with no
             # X-Container-Meta-Account-Id, indicating a failed
@@ -1938,11 +1940,12 @@ class TestAuth(unittest.TestCase):
                      'X-Auth-Admin-Key': 'supertest'}
         ).get_response(self.test_auth)
         self.assertEquals(resp.status_int, 201)
-        self.assertEquals(self.test_auth.app.calls, 4)
+        self.assertEquals(self.test_auth.app.calls, 5)
 
     def test_put_account_success_preexist_and_completed(
             self):
         self.test_auth.app = FakeApp(iter([
+            ('204 No Content', {}, ''),
             # Initial HEAD of account container to check for pre-existence
             # We're going to show it as existing this time, and with an
             # X-Container-Meta-Account-Id, indicating it already
@@ -1956,10 +1959,11 @@ class TestAuth(unittest.TestCase):
                      'X-Auth-Admin-Key': 'supertest'}
         ).get_response(self.test_auth)
         self.assertEquals(resp.status_int, 202)
-        self.assertEquals(self.test_auth.app.calls, 1)
+        self.assertEquals(self.test_auth.app.calls, 2)
 
     def test_put_account_success_with_given_suffix(self):
         self.test_auth.app = FakeApp(iter([
+            ('204 No Content', {}, ''),
             # Initial HEAD of account container to check for
             # pre-existence
             ('404 Not Found', {}, ''),
@@ -1981,7 +1985,7 @@ class TestAuth(unittest.TestCase):
                      'X-Account-Suffix': 'test-suffix'}).get_response(
                          self.test_auth)
         self.assertEquals(resp.status_int, 201)
-        self.assertEquals(self.test_auth.app.calls, 5)
+        self.assertEquals(self.test_auth.app.calls, 6)
 
     def test_put_account_fail_bad_creds(self):
         self.test_auth.app = FakeApp(iter([
@@ -2037,6 +2041,7 @@ class TestAuth(unittest.TestCase):
 
     def test_put_account_fail_on_initial_account_head(self):
         self.test_auth.app = FakeApp(iter([
+            ('204 No Content', {}, ''),
             # Initial HEAD of account container to check for
             # pre-existence
             ('503 Service Unavailable', {}, '')]))
@@ -2048,10 +2053,11 @@ class TestAuth(unittest.TestCase):
                      'X-Auth-Admin-Key': 'supertest'}).get_response(
                          self.test_auth)
         self.assertEquals(resp.status_int, 500)
-        self.assertEquals(self.test_auth.app.calls, 1)
+        self.assertEquals(self.test_auth.app.calls, 2)
 
     def test_put_account_fail_on_account_marker_put(self):
         self.test_auth.app = FakeApp(iter([
+            ('204 No Content', {}, ''),
             # Initial HEAD of account container to check for
             # pre-existence
             ('404 Not Found', {}, ''),
@@ -2065,10 +2071,11 @@ class TestAuth(unittest.TestCase):
                      'X-Auth-Admin-Key': 'supertest'}).get_response(
                          self.test_auth)
         self.assertEquals(resp.status_int, 500)
-        self.assertEquals(self.test_auth.app.calls, 2)
+        self.assertEquals(self.test_auth.app.calls, 3)
 
     def test_put_account_fail_on_storage_account_put(self):
         self.test_auth.app = FakeApp(iter([
+            ('204 No Content', {}, ''),
             # Initial HEAD of account container to check for
             # pre-existence
             ('404 Not Found', {}, ''),
@@ -2082,12 +2089,13 @@ class TestAuth(unittest.TestCase):
                      'X-Auth-Admin-Key': 'supertest'}).get_response(
                          self.test_auth)
         self.assertEquals(resp.status_int, 500)
-        self.assertEquals(self.test_auth.app.calls, 3)
+        self.assertEquals(self.test_auth.app.calls, 4)
 
     def test_put_account_fail_on_account_id_mapping(self):
         self.test_auth.app = FakeApp(iter([
             # Initial HEAD of account container to check for
             # pre-existence
+            ('200 No Content', {}, ''),
             ('404 Not Found', {}, ''),
             # PUT of account container
             ('204 No Content', {}, ''),
@@ -2101,10 +2109,11 @@ class TestAuth(unittest.TestCase):
                      'X-Auth-Admin-Key': 'supertest'}).get_response(
                          self.test_auth)
         self.assertEquals(resp.status_int, 500)
-        self.assertEquals(self.test_auth.app.calls, 3)
+        self.assertEquals(self.test_auth.app.calls, 4)
 
     def test_put_account_fail_on_services_object(self):
         self.test_auth.app = FakeApp(iter([
+            ('204 No Content', {}, ''),
             # Initial HEAD of account container to check for
             # pre-existence
             ('404 Not Found', {}, ''),
@@ -2122,10 +2131,11 @@ class TestAuth(unittest.TestCase):
                      'X-Auth-Admin-Key': 'supertest'}).get_response(
                          self.test_auth)
         self.assertEquals(resp.status_int, 500)
-        self.assertEquals(self.test_auth.app.calls, 4)
+        self.assertEquals(self.test_auth.app.calls, 5)
 
     def test_put_account_fail_on_post_mapping(self):
         self.test_auth.app = FakeApp(iter([
+            ('204 No Content', {}, ''),
             # Initial HEAD of account container to check for
             # pre-existence
             ('404 Not Found', {}, ''),
@@ -2145,7 +2155,7 @@ class TestAuth(unittest.TestCase):
                      'X-Auth-Admin-Key': 'supertest'}).get_response(
                          self.test_auth)
         self.assertEquals(resp.status_int, 500)
-        self.assertEquals(self.test_auth.app.calls, 5)
+        self.assertEquals(self.test_auth.app.calls, 6)
 
     def test_delete_account_success(self):
         self.test_auth.app = FakeApp(iter([
