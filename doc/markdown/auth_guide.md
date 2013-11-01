@@ -4,7 +4,9 @@
 * [Keystone](#keystone)
 * [Swiftkerbauth](#swiftkerbauth)
 * [GSwauth](#gswauth)
-  * [Quick Install](#gswauth_quick_install)  
+ * [Overview](#gswauth_overview)
+ * [Quick Install](#gswauth_quick_install)
+ * [How to use it](#swauth_use)
 
 <a name="keystone" />
 ## Keystone
@@ -21,6 +23,8 @@ TBD
 <a name="gswauth" />
 ## GSwauth
 
+<a name="gswauth_overview" />
+## Overview
 An easily deployable GlusterFS aware authentication service based on [Swauth](http://gholt.github.com/swauth/).
 GSwauth is a WSGI Middleware that uses Swift itself as a backing store to 
 maintain its metadata.
@@ -72,10 +76,12 @@ See <http://gholt.github.com/swauth/> for more information on Swauth.
 ```
 6. Restart your proxy server ``swift-init proxy reload``
 
-7. Initialize the GSwauth backing store in Gluster-Swift ``swauth-prep -K swauthkey``
+<a name="swauth_use" />
+##How to use it
+1. Initialize the GSwauth backing store in Gluster-Swift ``swauth-prep -K swauthkey``
 
-8. Add an account/user ``swauth-add-user -A http://127.0.0.1:8080/auth/ -K
+1. Add an account/user ``swauth-add-user -A http://127.0.0.1:8080/auth/ -K
    swauthkey -a volumename user1 password1``
-
-9. Ensure it works ``swift -A http://127.0.0.1:8080/auth/v1.0 -U volumename:user1 -K
+   
+1. Ensure it works ``swift -A http://127.0.0.1:8080/auth/v1.0 -U volumename:user1 -K
    password stat -v``
