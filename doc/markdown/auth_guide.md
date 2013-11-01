@@ -67,6 +67,8 @@ See <http://gholt.github.com/swauth/> for more information on Swauth.
     use = egg:gluster_swift#gswauth
     set log_name = gswauth
     super_admin_key = swauthkey
+    auth_type = sha1
+    auth_type_salt = swauthsalt
 ```
 5. Be sure your proxy server allows account management:
 ```
