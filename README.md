@@ -1,7 +1,4 @@
-# Gluster-Swift
-Gluster-Swift provides object interface to GlusterFS volumes. It allows files
-and directories created on GlusterFS volume to be accessed as objects via the
-OpenStack Swift and S3 API.
+# NAS Connector
 
-Please refer to [quick start guide](doc/markdown/quick_start_guide.md)
-to get started.
+NAS Connector provides an object storage interface to NAS Shares. It was built
+to be used with 1Space to assist migrating files from the NAS to a Swift cluster.

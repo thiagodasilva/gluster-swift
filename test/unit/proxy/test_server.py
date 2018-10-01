@@ -45,18 +45,18 @@ import mock
 from eventlet import sleep, spawn, wsgi, listen, Timeout
 from swift.common.utils import hash_path, json, storage_directory, public
 
-import gluster.swift.common.Glusterfs as gfs
-gfs.RUN_DIR = mkdtemp()
+import swift.common.manager as mgr
+mgr.RUN_DIR = mkdtemp()
 
 from test.unit import (
     connect_tcp, readuntil2crlfs, FakeLogger, fake_http_connect, FakeRing,
     FakeMemcache, debug_logger, patch_policies, write_fake_ring,
     mocked_http_conn)
 from swift.proxy.controllers.obj import ReplicatedObjectController
-from gluster.swift.proxy import server as proxy_server
-from gluster.swift.account import server as account_server
-from gluster.swift.container import server as container_server
-from gluster.swift.obj import server as object_server
+from nas_connector.swift.proxy import server as proxy_server
+from nas_connector.swift.account import server as account_server
+from nas_connector.swift.container import server as container_server
+from nas_connector.swift.obj import server as object_server
 from swift.common.middleware import proxy_logging
 from swift.common.middleware.acl import parse_acl, format_acl
 from swift.common.exceptions import ChunkReadTimeout, DiskFileNotExist, \
@@ -66,14 +66,14 @@ from swift.common.ring import RingData
 from swift.common.utils import mkdirs, normalize_timestamp, NullLogger
 from swift.common.wsgi import monkey_patch_mimetools, loadapp
 from swift.proxy.controllers import base as proxy_base
-from swift.proxy.controllers.base import  get_cache_key,cors_validation
+from swift.proxy.controllers.base import get_cache_key, cors_validation
 import swift.proxy.controllers
 import swift.proxy.controllers.obj
 from swift.common.swob import Request, Response, HTTPUnauthorized, \
     HTTPException, HTTPForbidden, HeaderKeyDict
 from swift.common import storage_policy
-from swift.common.storage_policy import StoragePolicy, ECStoragePolicy, \
-    StoragePolicyCollection, POLICIES
+from swift.common.storage_policy import StoragePolicy, \
+    POLICIES
 from swift.common.request_helpers import get_sys_meta_prefix
 
 # mocks
@@ -97,7 +97,7 @@ def do_setup(the_object_server):
     # Since we're starting up a lot here, we're going to test more than
     # just chunked puts; we're also going to test parts of
     # proxy_server.Application we couldn't get to easily otherwise.
-    _testdir = os.path.join(gfs.RUN_DIR, 'swift')
+    _testdir = os.path.join(mgr.RUN_DIR, 'swift')
     mkdirs(_testdir)
     rmtree(_testdir)
     for drive in ('sda1', 'sdb1', 'sdc1', 'sdd1', 'sde1',
@@ -119,7 +119,6 @@ def do_setup(the_object_server):
     obj1lis = listen(('localhost', 0))
     obj2lis = listen(('localhost', 0))
     obj3lis = listen(('localhost', 0))
-    objsocks = [obj1lis, obj2lis, obj3lis]
     _test_sockets = \
         (prolis, acc1lis, acc2lis, con1lis, con2lis, obj1lis, obj2lis, obj3lis)
     account_ring_path = os.path.join(_testdir, 'account.ring.gz')
@@ -129,7 +128,7 @@ def do_setup(the_object_server):
                       'port': acc1lis.getsockname()[1]},
                      {'id': 1, 'zone': 1, 'device': 'sdb1', 'ip': '127.0.0.1',
                       'port': acc2lis.getsockname()[1]},
-                     # Gluster volume mapping to device
+                     # volume mapping to device
                      {'id': 0, 'zone': 0, 'device': 'a', 'ip': '127.0.0.1',
                       'port': acc1lis.getsockname()[1]},
                      {'id': 1, 'zone': 1, 'device': 'a1', 'ip': '127.0.0.1',
@@ -142,7 +141,7 @@ def do_setup(the_object_server):
                       'port': con1lis.getsockname()[1]},
                      {'id': 1, 'zone': 1, 'device': 'sdb1', 'ip': '127.0.0.1',
                       'port': con2lis.getsockname()[1]},
-                     # Gluster volume mapping to device
+                     # volume mapping to device
                      {'id': 0, 'zone': 0, 'device': 'a', 'ip': '127.0.0.1',
                       'port': con1lis.getsockname()[1]},
                      {'id': 1, 'zone': 1, 'device': 'a1', 'ip': '127.0.0.1',
@@ -155,7 +154,7 @@ def do_setup(the_object_server):
                       'port': obj1lis.getsockname()[1]},
                      {'id': 1, 'zone': 1, 'device': 'sdb1', 'ip': '127.0.0.1',
                       'port': obj2lis.getsockname()[1]},
-                     # Gluster volume mapping to device
+                     # volume mapping to device
                      {'id': 0, 'zone': 0, 'device': 'a', 'ip': '127.0.0.1',
                       'port': obj1lis.getsockname()[1]},
                      {'id': 1, 'zone': 1, 'device': 'a1', 'ip': '127.0.0.1',
@@ -210,7 +209,7 @@ def do_setup(the_object_server):
                                                          'x-trans-id': 'test'})
         resp = conn.getresponse()
         assert(resp.status == 202)
-    # Gluster: ensure account exists
+    # ensure account exists
     ts = normalize_timestamp(time.time())
     partition, nodes = prosrv.account_ring.get_nodes('a1')
     for node in nodes:
@@ -222,8 +221,8 @@ def do_setup(the_object_server):
                                                         {'X-Timestamp': ts,
                                                          'x-trans-id': 'test'})
         resp = conn.getresponse()
-        # For GlusterFS the volume should have already been created since
-        # accounts map to volumes.  Expect a 202 instead of a 201 as for
+        # the share should have already been created since
+        # accounts map to shares. Expect a 202 instead of a 201 as for
         # OpenStack Swift's proxy unit test the account is explicitly created.
         assert(resp.status == 202)
     # Create containers, 1 per test policy
@@ -254,8 +253,8 @@ def do_setup(the_object_server):
     fd = sock.makefile()
     fd.write(
         'PUT /v1/a/c1 HTTP/1.1\r\nHost: localhost\r\n'
-        #'Connection: close\r\nX-Auth-Token: t\r\nX-Storage-Policy: one\r\n'
-        # Gluster-Swift: No storage policies
+        # 'Connection: close\r\nX-Auth-Token: t\r\nX-Storage-Policy: one\r\n'
+        # NAS Connector: No storage policies
         'Connection: close\r\nX-Auth-Token: t\r\n'
         'Content-Length: 0\r\n\r\n')
     fd.flush()
@@ -268,8 +267,8 @@ def do_setup(the_object_server):
     fd = sock.makefile()
     fd.write(
         'PUT /v1/a/c2 HTTP/1.1\r\nHost: localhost\r\n'
-        #'Connection: close\r\nX-Auth-Token: t\r\nX-Storage-Policy: two\r\n'
-        # Gluster-Swift: No storage policies
+        # 'Connection: close\r\nX-Auth-Token: t\r\nX-Storage-Policy: two\r\n'
+        # Nas Connector: No storage policies
         'Connection: close\r\nX-Auth-Token: t\r\n'
         'Content-Length: 0\r\n\r\n')
     fd.flush()

@@ -27,14 +27,12 @@ import shutil
 import cPickle as pickle
 from collections import defaultdict
 from mock import patch, Mock
-from gluster.swift.common import utils, Glusterfs
-from gluster.swift.common.utils import deserialize_metadata, \
+from nas_connector.swift.common import utils
+from nas_connector.swift.common.utils import deserialize_metadata, \
     serialize_metadata, PICKLE_PROTOCOL
-from gluster.swift.common.exceptions import GlusterFileSystemOSError,\
-    GlusterFileSystemIOError
+from nas_connector.swift.common.exceptions import NasConnectorFileSystemOSError,\
+    NasConnectorFileSystemIOError
 from swift.common.exceptions import DiskFileNoSpace
-
-from nose import SkipTest
 
 try:
     import scandir
@@ -271,21 +269,25 @@ class TestUtils(unittest.TestCase):
             self.fail("Expected an IOError exception on remove")
 
     def test_read_metadata(self):
+        raise unittest.SkipTest('Skip until writing metadata is supported')
         path = "/tmp/foo/r"
         expected_d = {'a': 'y'}
         xkey = _xkey(path, utils.METADATA_KEY)
         _xattrs[xkey] = serialize_metadata(expected_d)
         res_d = utils.read_metadata(path)
-        assert res_d == expected_d, "Expected %r, result %r" % (expected_d, res_d)
+        assert res_d == expected_d, "Expected %r, result %r" % \
+            (expected_d, res_d)
         assert _xattr_op_cnt['get'] == 1, "%r" % _xattr_op_cnt
 
     def test_read_metadata_notfound(self):
+        raise unittest.SkipTest('Skip until writing metadata is supported')
         path = "/tmp/foo/r"
         res_d = utils.read_metadata(path)
         assert res_d == {}
         assert _xattr_op_cnt['get'] == 1, "%r" % _xattr_op_cnt
 
     def test_read_metadata_err(self):
+        raise unittest.SkipTest('Skip until writing metadata is supported')
         path = "/tmp/foo/r"
         expected_d = {'a': 'y'}
         xkey = _xkey(path, utils.METADATA_KEY)
@@ -300,6 +302,7 @@ class TestUtils(unittest.TestCase):
             self.fail("Expected an IOError exception on get")
 
     def test_read_metadata_multiple(self):
+        raise unittest.SkipTest('Skip until writing metadata is supported')
         path = "/tmp/foo/r"
         expected_d = {'a': 'y' * 150000}
         expected_p = serialize_metadata(expected_d)
@@ -309,10 +312,12 @@ class TestUtils(unittest.TestCase):
             expected_p = expected_p[utils.MAX_XATTR_SIZE:]
         assert not expected_p
         res_d = utils.read_metadata(path)
-        assert res_d == expected_d, "Expected %r, result %r" % (expected_d, res_d)
+        assert res_d == expected_d, "Expected %r, result %r" % \
+            (expected_d, res_d)
         assert _xattr_op_cnt['get'] == 4, "%r" % _xattr_op_cnt
 
     def test_read_metadata_multiple_one_missing(self):
+        raise unittest.SkipTest('Skip until writing metadata is supported')
         path = "/tmp/foo/r"
         expected_d = {'a': 'y' * 150000}
         expected_p = serialize_metadata(expected_d)
@@ -356,15 +361,15 @@ class TestUtils(unittest.TestCase):
         assert _xattr_op_cnt['set'] == 0, "%r" % _xattr_op_cnt
 
     def test_deserialize_metadata_pickle(self):
-        orig__read_pickled_metadata = Glusterfs._read_pickled_metadata
+        orig__read_pickled_metadata = utils._read_pickled_metadata
         orig_md = {'key1': 'value1', 'key2': 'value2'}
         pickled_md = pickle.dumps(orig_md, PICKLE_PROTOCOL)
         _m_pickle_loads = Mock(return_value={})
         try:
-            with patch('gluster.swift.common.utils.pickle.loads',
+            with patch('nas_connector.swift.common.utils.pickle.loads',
                        _m_pickle_loads):
                 # Conf option turned off
-                Glusterfs._read_pickled_metadata = False
+                utils._read_pickled_metadata = False
                 # pickled
                 utils.deserialize_metadata(pickled_md)
                 self.assertFalse(_m_pickle_loads.called)
@@ -375,7 +380,7 @@ class TestUtils(unittest.TestCase):
                 _m_pickle_loads.reset_mock()
 
                 # Conf option turned on
-                Glusterfs._read_pickled_metadata = True
+                utils._read_pickled_metadata = True
                 # pickled
                 md = utils.deserialize_metadata(pickled_md)
                 self.assertTrue(_m_pickle_loads.called)
@@ -391,13 +396,13 @@ class TestUtils(unittest.TestCase):
                 md = utils.deserialize_metadata("malformed_pickle")
                 self.assertTrue(isinstance(md, dict))
         finally:
-            Glusterfs._read_pickled_metadata = orig__read_pickled_metadata
+            utils._read_pickled_metadata = orig__read_pickled_metadata
 
     def test_deserialize_metadata_json(self):
         orig_md = {'key1': 'value1', 'key2': 'value2'}
         json_md = json.dumps(orig_md, separators=(',', ':'))
         _m_json_loads = Mock(return_value={})
-        with patch('gluster.swift.common.utils.json.loads',
+        with patch('nas_connector.swift.common.utils.json.loads',
                    _m_json_loads):
             utils.deserialize_metadata("not_json")
             self.assertFalse(_m_json_loads.called)
@@ -454,7 +459,7 @@ class TestUtils(unittest.TestCase):
         os.lseek(fd, 0, os.SEEK_SET)
 
         mock_do_close = Mock()
-        with patch("gluster.swift.common.utils.do_close", mock_do_close):
+        with patch("nas_connector.swift.common.utils.do_close", mock_do_close):
             etag = utils._get_etag(fd)
         self.assertEqual(etag, hashlib.md5(data).hexdigest())
         self.assertTrue(mock_do_close.called)
@@ -472,7 +477,7 @@ class TestUtils(unittest.TestCase):
         try:
             utils.get_object_metadata(
                 os.path.join(tf.name, "doesNotEx1st"))
-        except GlusterFileSystemOSError as e:
+        except NasConnectorFileSystemOSError as e:
             assert e.errno != errno.ENOENT
         else:
             self.fail("Expected exception")
@@ -510,6 +515,7 @@ class TestUtils(unittest.TestCase):
             os.rmdir(td)
 
     def test_create_object_metadata_file(self):
+        raise unittest.SkipTest('Skip until writing metadata is supported')
         tf = tempfile.NamedTemporaryFile()
         tf.file.write('4567')
         tf.file.flush()
@@ -528,10 +534,12 @@ class TestUtils(unittest.TestCase):
         assert md[utils.X_OBJECT_TYPE] == utils.FILE
         assert md[utils.X_CONTENT_TYPE] == utils.FILE_TYPE
         assert md[utils.X_CONTENT_LENGTH] == os.path.getsize(tf.name)
-        assert md[utils.X_TIMESTAMP] == utils.normalize_timestamp(os.path.getctime(tf.name))
+        assert md[utils.X_TIMESTAMP] == utils.normalize_timestamp(
+            os.path.getctime(tf.name))
         assert md[utils.X_ETAG] == utils._get_etag(tf.name)
 
     def test_create_object_metadata_dir(self):
+        raise unittest.SkipTest('Skip until writing metadata is supported')
         td = tempfile.mkdtemp()
         try:
             r_md = utils.create_object_metadata(td)
@@ -549,7 +557,8 @@ class TestUtils(unittest.TestCase):
             assert md[utils.X_OBJECT_TYPE] == utils.DIR_NON_OBJECT
             assert md[utils.X_CONTENT_TYPE] == utils.DIR_TYPE
             assert md[utils.X_CONTENT_LENGTH] == 0
-            assert md[utils.X_TIMESTAMP] == utils.normalize_timestamp(os.path.getctime(td))
+            assert md[utils.X_TIMESTAMP] == utils.normalize_timestamp(
+                os.path.getctime(td))
             assert md[utils.X_ETAG] == hashlib.md5().hexdigest()
         finally:
             os.rmdir(td)
@@ -604,6 +613,7 @@ class TestUtils(unittest.TestCase):
                  utils.X_OBJECTS_COUNT, utils.X_BYTES_USED]
 
     def test_create_container_metadata(self):
+        raise unittest.SkipTest('Skip until writing metadata is supported')
         td = tempfile.mkdtemp()
         try:
             r_md = utils.create_container_metadata(td)
@@ -619,8 +629,10 @@ class TestUtils(unittest.TestCase):
             for key in self.cont_keys:
                 assert key in md, "Expected key %s in %r" % (key, md)
             assert md[utils.X_TYPE] == (utils.CONTAINER, 0)
-            assert md[utils.X_TIMESTAMP] == (utils.normalize_timestamp(os.path.getctime(td)), 0)
-            assert md[utils.X_PUT_TIMESTAMP] == (utils.normalize_timestamp(os.path.getmtime(td)), 0)
+            assert md[utils.X_TIMESTAMP] == (
+                utils.normalize_timestamp(os.path.getctime(td)), 0)
+            assert md[utils.X_PUT_TIMESTAMP] == (utils.normalize_timestamp(
+                os.path.getmtime(td)), 0)
             assert md[utils.X_OBJECTS_COUNT] == (0, 0)
             assert md[utils.X_BYTES_USED] == (0, 0)
         finally:
@@ -630,6 +642,7 @@ class TestUtils(unittest.TestCase):
     acct_keys.append(utils.X_CONTAINER_COUNT)
 
     def test_create_account_metadata(self):
+        raise unittest.SkipTest('Skip until writing metadata is supported')
         td = tempfile.mkdtemp()
         try:
             r_md = utils.create_account_metadata(td)
@@ -645,8 +658,10 @@ class TestUtils(unittest.TestCase):
             for key in self.acct_keys:
                 assert key in md, "Expected key %s in %r" % (key, md)
             assert md[utils.X_TYPE] == (utils.ACCOUNT, 0)
-            assert md[utils.X_TIMESTAMP] == (utils.normalize_timestamp(os.path.getctime(td)), 0)
-            assert md[utils.X_PUT_TIMESTAMP] == (utils.normalize_timestamp(os.path.getmtime(td)), 0)
+            assert md[utils.X_TIMESTAMP] == (utils.normalize_timestamp(
+                os.path.getctime(td)), 0)
+            assert md[utils.X_PUT_TIMESTAMP] == (utils.normalize_timestamp(
+                os.path.getmtime(td)), 0)
             assert md[utils.X_OBJECTS_COUNT] == (0, 0)
             assert md[utils.X_BYTES_USED] == (0, 0)
             assert md[utils.X_CONTAINER_COUNT] == (0, 0)
@@ -657,7 +672,10 @@ class TestUtils(unittest.TestCase):
         orig_cwd = os.getcwd()
         td = tempfile.mkdtemp()
         try:
-            tf = tarfile.open("common/data/account_tree.tar.bz2", "r:bz2")
+            swiftdir = os.path.join(
+                os.getcwd(), "test", "unit", "common", "data",
+                "account_tree.tar.bz2")
+            tf = tarfile.open(swiftdir, "r:bz2")
             os.chdir(td)
             tf.extractall()
 
@@ -688,14 +706,17 @@ class TestUtils(unittest.TestCase):
 
     def test_get_container_details(self):
         orig_cwd = os.getcwd()
-        __do_getsize = Glusterfs._do_getsize
+        __do_getsize = utils._do_getsize
         td = tempfile.mkdtemp()
         try:
-            tf = tarfile.open("common/data/container_tree.tar.bz2", "r:bz2")
+            swiftdir = os.path.join(
+                os.getcwd(), "test", "unit", "common", "data",
+                "container_tree.tar.bz2")
+            tf = tarfile.open(swiftdir, "r:bz2")
             os.chdir(td)
             tf.extractall()
 
-            Glusterfs._do_getsize = False
+            utils._do_getsize = False
 
             obj_list, object_count, bytes_used = \
                 utils.get_container_details(td)
@@ -706,20 +727,23 @@ class TestUtils(unittest.TestCase):
                                          'dir1/file1', 'dir1/file2'
                                          ]), repr(obj_list)
         finally:
-            Glusterfs._do_getsize = __do_getsize
+            utils._do_getsize = __do_getsize
             os.chdir(orig_cwd)
             shutil.rmtree(td)
 
     def test_get_container_details_from_fs_do_getsize_true(self):
         orig_cwd = os.getcwd()
-        __do_getsize = Glusterfs._do_getsize
+        __do_getsize = utils._do_getsize
         td = tempfile.mkdtemp()
         try:
-            tf = tarfile.open("common/data/container_tree.tar.bz2", "r:bz2")
+            swiftdir = os.path.join(
+                os.getcwd(), "test", "unit", "common", "data",
+                "container_tree.tar.bz2")
+            tf = tarfile.open(swiftdir, "r:bz2")
             os.chdir(td)
             tf.extractall()
 
-            Glusterfs._do_getsize = True
+            utils._do_getsize = True
 
             obj_list, object_count, bytes_used = \
                 utils.get_container_details(td)
@@ -729,7 +753,7 @@ class TestUtils(unittest.TestCase):
                                          'dir1/file1', 'dir1/file2'
                                          ]), repr(obj_list)
         finally:
-            Glusterfs._do_getsize = __do_getsize
+            utils._do_getsize = __do_getsize
             os.chdir(orig_cwd)
             shutil.rmtree(td)
 
@@ -883,6 +907,7 @@ class TestUtilsDirObjects(unittest.TestCase):
         self.assertTrue(utils.rmobjdir(self.rootdir))
 
     def test_rmobjdir_removing_dirs(self):
+        raise unittest.SkipTest('Skip until writing metadata is supported')
         self.assertFalse(utils.rmobjdir(self.rootdir))
 
         # Remove the files
@@ -919,7 +944,7 @@ class TestUtilsDirObjects(unittest.TestCase):
         def _mock_rm(path):
             print "_mock_rm-metadata_enoent(%s)" % path
             shutil.rmtree(path)
-            raise GlusterFileSystemIOError(errno.ENOENT,
+            raise NasConnectorFileSystemIOError(errno.ENOENT,
                                            os.strerror(errno.ENOENT))
 
         # Remove the files

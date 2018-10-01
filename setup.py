@@ -14,17 +14,15 @@
 # limitations under the License.
 
 from setuptools import setup, find_packages
-from gluster.swift import _pkginfo
+from nas_connector.swift import _pkginfo
 
 
 setup(
     name=_pkginfo.name,
     version=_pkginfo.full_version,
-    description='Gluster For Swift',
+    description='Nas Connector',
     license='Apache License (2.0)',
-    author='Red Hat, Inc.',
-    author_email='gluster-users@gluster.org',
-    url='http://launchpad.net/gluster-swift',
+    author='SwiftStack',
     packages=find_packages(exclude=['test', 'bin']),
     test_suite='nose.collector',
     classifiers=[
@@ -41,31 +39,19 @@ setup(
     ],
     install_requires=[],
     scripts=[
-        'bin/gluster-swift-gen-builders',
-        'bin/gluster-swift-print-metadata',
-        'bin/gluster-swift-migrate-metadata',
-        'bin/gluster-swift-object-expirer',
-        'gluster/swift/common/middleware/gswauth/bin/gswauth-add-account',
-        'gluster/swift/common/middleware/gswauth/bin/gswauth-add-user',
-        'gluster/swift/common/middleware/gswauth/bin/gswauth-cleanup-tokens',
-        'gluster/swift/common/middleware/gswauth/bin/gswauth-delete-account',
-        'gluster/swift/common/middleware/gswauth/bin/gswauth-delete-user',
-        'gluster/swift/common/middleware/gswauth/bin/gswauth-list',
-        'gluster/swift/common/middleware/gswauth/bin/gswauth-prep',
-        'gluster/swift/common/middleware/gswauth/bin/'
-        'gswauth-set-account-service',
-
+        'bin/nasconnector-gen-builders',
+        'bin/nasconnector-print-metadata',
     ],
     entry_points={
         'paste.app_factory': [
-            'proxy=gluster.swift.proxy.server:app_factory',
-            'object=gluster.swift.obj.server:app_factory',
-            'container=gluster.swift.container.server:app_factory',
-            'account=gluster.swift.account.server:app_factory',
+            'proxy=nas_connector.swift.proxy.server:app_factory',
+            'object=nas_connector.swift.obj.server:app_factory',
+            'container=nas_connector.swift.container.server:app_factory',
+            'account=nas_connector.swift.account.server:app_factory',
         ],
         'paste.filter_factory': [
-            'gswauth=gluster.swift.common.middleware.gswauth.swauth.'
-            'middleware:filter_factory',
+            'nas_auth=nas_connector.swift.common.middleware.'
+            'nas_auth:filter_factory'
         ],
     },
 )

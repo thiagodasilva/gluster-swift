@@ -15,12 +15,11 @@
 
 import unittest
 import swift.common.constraints
-from nose import SkipTest
 from mock import Mock, patch
-from gluster.swift.common import constraints as cnt
+from nas_connector.swift.common import constraints as cnt
 
 
-def mock_glusterfs_mount(*args, **kwargs):
+def mock_nas_connector_mount(*args, **kwargs):
     return True
 
 
@@ -75,16 +74,16 @@ class TestConstraints(unittest.TestCase):
         self.assertTrue(cnt.validate_obj_name_component('..'))
         self.assertTrue(cnt.validate_obj_name_component(''))
 
-    def test_gluster_check_object_creation(self):
-        with patch('gluster.swift.common.constraints.__check_object_creation',
+    def test_check_object_creation(self):
+        with patch('nas_connector.swift.common.constraints.__check_object_creation',
                    mock_check_object_creation):
             req = Mock()
             req.headers = []
-            self.assertFalse(cnt.gluster_check_object_creation(req, 'dir/z'))
+            self.assertFalse(cnt._check_object_creation(req, 'dir/z'))
 
-    def test_gluster_check_object_creation_err(self):
-        with patch('gluster.swift.common.constraints.__check_object_creation',
+    def test_check_object_creation_err(self):
+        with patch('nas_connector.swift.common.constraints.__check_object_creation',
                    mock_check_object_creation):
             req = Mock()
             req.headers = []
-            self.assertTrue(cnt.gluster_check_object_creation(req, 'dir/.'))
+            self.assertTrue(cnt._check_object_creation(req, 'dir/.'))

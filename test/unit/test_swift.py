@@ -20,12 +20,12 @@ import unittest
 import shutil
 import tempfile
 
-import gluster.swift as gs
+import nas_connector.swift as gs
 
 
 class TestPkgInfo(unittest.TestCase):
     """
-    Tests for gluster.swift PkgInfo class.
+    Tests for nas_connector.swift PkgInfo class.
     """
 
     def test_constructor(self):

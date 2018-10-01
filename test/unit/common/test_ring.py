@@ -16,9 +16,8 @@
 import os
 import errno
 import unittest
-import gluster.swift.common.constraints
 import swift.common.utils
-from gluster.swift.common.ring import Ring
+from nas_connector.swift.common.ring import Ring
 
 
 class TestRing(unittest.TestCase):
@@ -26,7 +25,7 @@ class TestRing(unittest.TestCase):
 
     def setUp(self):
         swift.common.utils.HASH_PATH_SUFFIX = 'endcap'
-        swiftdir = os.path.join(os.getcwd(), "common", "data")
+        swiftdir = os.path.join(os.getcwd(), "test", "unit", "common", "data")
         self.ring = Ring(swiftdir, ring_name='object')
 
     def test_first_device(self):
